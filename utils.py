@@ -8,6 +8,11 @@ def mot10char():  # entrer le secret
         secret = input("C'est beaucoup trop long, 10 caractères S.V.P : ")
     return (secret)
 
+def messageLong():
+    secret = input("Donnez un message secret : ")
+    while (len(secret) > 1000000000000000000000000):
+        secret = input("C'est beaucoup trop long, 10 caractères S.V.P : ")
+    return (secret)
 
 def home_string_to_int(x):  # pour transformer un string en int
     z = 0

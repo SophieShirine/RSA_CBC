@@ -27,6 +27,104 @@ def home_euclide(y, b):
 
     return nouvt % y
 
+def home_cbc_encrypt(msg,key,initVect):
+    # valeur des clés
+    e = key[0]
+    n = key[1]
+
+    #vecteurs
+    decimVect = utils.home_string_to_int(initVect)  # valeur décimal du vecteur initiale
+    c = decimVect  # valeur du vecteur utilise pour le xor a chaque iteration
+
+    blocsMsg = []  # tableau de string contenant le msg coupés en blocs
+    crypted = []  # tableau d'entiers contenant les valeurs cryptees de chaque bloc
+
+    # DECOUPAGE DU MESSAGE EN BLOCS DE TAILLE N (ICI N = 3)
+    for i in range(len(msg), 0, -tailleBlocs):
+        if i - tailleBlocs < 0:
+            fullBlock = ("\0" * (tailleBlocs - i)) + msg[0:i]
+            blocsMsg.insert(0, fullBlock)
+        else:
+            blocsMsg.insert(0, msg[i - tailleBlocs:i])
+
+    # CRYPTAGE
+    for bloc in blocsMsg:
+        # calculer le xor
+        decimBloc = utils.home_string_to_int(bloc)
+        xor = decimBloc ^ c
+
+        # stocker la valeur chiffree
+        crypted.append(home_mod_exp(xor, e, n))
+        # on change le vecteur
+        c = home_mod_exp(xor, e, n)
+
+    return crypted
+
+def home_cbc_decrypt(cryptedMsg,key,initVect):
+    # valeur des clés
+    d = key[0]
+    n = key[1]
+
+    #vecteur
+    decimVect = utils.home_string_to_int(initVect)  # valeur décimal du vecteur initiale
+    c = decimVect  # valeur du vecteur utilise pour le xor a chaque iteration
+    decrypted = ""
+
+    # DECRYTER
+    for bloc in cryptedMsg:
+        decryptBloc = home_mod_exp(bloc, d, n)
+        xor = decryptBloc ^ c  # valeur decimale decryptee
+        # decrypted.append(utils.home_int_to_string(xor))
+        decrypted = decrypted + utils.home_int_to_string(xor)
+        c = bloc
+
+    return decrypted
+
+
+def home_cipher_block_chaining(msg, key, initVect):
+    #valeur des clés
+    e = key[0]
+    n = key[1]
+    d = key[2]
+
+    decimVect = utils.home_string_to_int(initVect) #valeur décimal du vecteur initiale
+    c = decimVect #valeur du vecteur utilise pour le xor a chaque iteration
+
+    blocsMsg = [] #tableau de string contenant le msg coupés en blocs
+    crypted = [] #tableau d'entiers contenant les valeurs cryptees de chaque bloc
+    decrypted = ""
+
+    #DECOUPAGE DU MESSAGE EN BLOCS DE TAILLE N (ICI N = 3)
+    for i in range(len(msg),0,-tailleBlocs):
+        if i - tailleBlocs < 0:
+            fullBlock = ("\0" * (tailleBlocs - i)) + msg[0:i]
+            blocsMsg.insert(0,fullBlock)
+        else:
+            blocsMsg.insert(0,msg[i-tailleBlocs:i])
+
+
+    #CRYPTAGE
+    for bloc in blocsMsg:
+        # calculer le xor
+        decimBloc = utils.home_string_to_int(bloc)
+        xor = decimBloc ^ c
+
+        # stocker la valeur chiffree
+        crypted.append(home_mod_exp(xor, e, n))
+        # on change le vecteur
+        c = home_mod_exp(xor, e, n)
+
+
+    c = decimVect
+    #DECRYTER
+    for bloc in crypted:
+        decryptBloc = home_mod_exp(bloc, d, n)
+        xor = decryptBloc ^ c #valeur decimale decryptee
+        #decrypted.append(utils.home_int_to_string(xor))
+        decrypted = decrypted + utils.home_int_to_string(xor)
+        c = bloc
+
+    print(decrypted)
 
 # CLE ALICE
 x1a = 59491385193988702457395767302826768908819578825613995679824307137199289878110765336234096122020538234539
@@ -44,6 +142,9 @@ phib = ((x1b - 1) * (x2b - 1)) // home_pgcd(x1b - 1, x2b - 1)
 eb = 23
 db = home_euclide(phib, eb)
 
+vect = "f-_fdV5Jdsfme"
+tailleBlocs = 3
+
 if __name__ == '__main__':
     print("Clé publique de Bob : (" + str(eb) + "," + str(nb) + ")")
     print("Clé privé de Bob : db = " + str(db))
@@ -52,6 +153,9 @@ if __name__ == '__main__':
 
     # ENTRER LE MESSAGE DE BOB
     message = utils.mot10char()
+    #message = utils.messageLong()
+    #home_cipher_block_chaining(message,(ea,na,da),vect)
+
 
     # TRANSFORMER EN NOMBRE DECIMAL
     decimalMessage = utils.home_string_to_int(message)
