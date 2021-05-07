@@ -10,6 +10,22 @@ import utils
 import time
 
 
+def home_euclide(y, b):
+    """
+        Euclid algorithm
+        :param y: integer
+        :param b: integer
+        :return : integer
+    """
+    (r, nouvr, t, nouvt) = (y, b, 0, 1)
+
+    while nouvr > 1:
+        q = (r // nouvr)
+        (r, nouvr, t, nouvt) = (nouvr, r % nouvr, nouvt, t - (q * nouvt))
+
+    return nouvt % y
+
+
 def home_mod_exp(x, y, n):
     """
         Modular exponentiation function x^y%n
@@ -30,33 +46,40 @@ def home_mod_exp(x, y, n):
     return result
 
 
-def home_euclide(y, b):
+def home_crt(p, q, d, msg):
     """
-        Euclid algorithm
-        :param y: integer
-        :param b: integer
-        :return : integer
+        Chinese remainder theorem used to solve m = msg^d mod(n)
+        :param p: primary number (n = p * q)
+        :param q: primary number (n = p * q)
+        :param d: key
+        :param msg: decimal value of a message
+        :return m: m = msg^d mod(n)
     """
-    (r, nouvr, t, nouvt) = (y, b, 0, 1)
+    q_inv = home_euclide(p, q)
+    dq = d % (q - 1)
+    dp = d % (p - 1)
 
-    while nouvr > 1:
-        q = (r // nouvr)
-        (r, nouvr, t, nouvt) = (nouvr, r % nouvr, nouvt, t - (q * nouvt))
+    mq = home_mod_exp(msg, dq, q)
+    mp = home_mod_exp(msg, dp, p)
 
-    return nouvt % y
+    h = ((mp - mq) * q_inv) % p
+    m = (mq + h * q) % (p * q)
+
+    return m
 
 
 def home_cbc_encrypt(msg, key):
     """
         Crypting function of cbc
         :param msg: message to encrypt in hexadecimal
-        :param key: key[0] = e, key[1] = n
+        :param key: key[0] = e, key[1] = p, key[2] = q (p*q = n)
         :return : list crypted
     """
 
     # key values
     e = key[0]
-    n = key[1]
+    p = key[1]
+    q = key[2]
 
     c = decim_vect  # vector used at each iteration
 
@@ -75,8 +98,8 @@ def home_cbc_encrypt(msg, key):
     for bloc in msg_chunks:
         decim_chunk = utils.home_string_to_int(bloc)  # get the decimal value
         xor = decim_chunk ^ c
-        crypted.append(home_mod_exp(xor, e, n))
-        c = home_mod_exp(xor, e, n)
+        crypted.append(home_crt(p, q, e, xor))
+        c = home_crt(p, q, e, xor)
 
     return crypted
 
@@ -85,20 +108,21 @@ def home_cbc_decrypt(crypted_msg, key):
     """
         Function decoding a message using cbc
         :param crypted_msg: a list of crypted chunks
-        :param key: key[0] = e, key[1] = n
+        :param key: key[0] = e, key[1] = p, key[2] = q (p*q = n)
         :return : string decrypted
     """
 
     # key values
     d = key[0]
-    n = key[1]
+    p = key[1]
+    q = key[2]
 
     c = decim_vect
     decrypted = ""  # decrypted message
 
     # DECODING
     for bloc in crypted_msg:
-        decrypt_chunk = home_mod_exp(bloc, d, n)
+        decrypt_chunk = home_crt(p, q, d, bloc)
         xor = decrypt_chunk ^ c
         decrypted = decrypted + utils.home_int_to_string(xor)
         c = bloc
@@ -114,13 +138,13 @@ def cbc_test_case():
     start = time.time()
 
     # CRYPT THAT MUSIQUE USING ALICE'S PUBLIC KEY
-    crypted_message = home_cbc_encrypt(message, (ea, na))
+    crypted_message = home_cbc_encrypt(message, (ea, x1a, x2a))
 
     # BOB SENDS THE MESSAGE
     print("\n \t##### Bob sent the message to Alice ! #####\n")
 
     # ALICE DECODES THE MESSAGE
-    decrypted_message = home_cbc_decrypt(crypted_message, (da, na))
+    decrypted_message = home_cbc_decrypt(crypted_message, (da, x1a, x2a))
     print("Alice decodes the message and gets : \n" + str(decrypted_message))
 
     print("The time used to execute this is given below")
@@ -139,7 +163,7 @@ def rsa_test_case():
     print("1) The decimal value of secret is :  " + str(decimal_message))
 
     # CRYPT THE MESSAGE WITH ALICE'S PUBLIC KEY
-    chiff_message = home_mod_exp(decimal_message, ea, na)
+    chiff_message = home_crt(x1a, x2a, ea, decimal_message)
     print("2) Here is the crypted message : \n" + str(chiff_message))
 
     # COMPUTE THE MESSAGE'S HASH
@@ -147,19 +171,19 @@ def rsa_test_case():
     print("3) Here is the message's hash in decimal value :\n" + str(Bhachis))
 
     # CALCULATE THE SIGNATURE WITH THE PRIVATE KEY AND THE HASH
-    signature = home_mod_exp(Bhachis, db, nb)
+    signature = home_crt(x1b, x2b, db, Bhachis)
     print("4) Here is the signature obtained with the hash and the private key :\n" + str(signature))
 
     # BOB SENDS THE CRYPTED MESSAGE AND HIS SIGNATURE
     print("\n \t##### Bob sent the message and the signature ! #####\n")
 
     # ALICE DECODES THE MESSAGE
-    dechiff_int = home_mod_exp(chiff_message, da, na)
+    dechiff_int = home_crt(x1a, x2a, da, chiff_message)
     dechiff_message = utils.home_int_to_string(dechiff_int)
     print("1) Alice decodes the message and gets : \n" + str(dechiff_message))
 
     # ALICE DECODES THE SIGNATURE
-    dechiff_signature = home_mod_exp(signature, eb, nb)
+    dechiff_signature = home_crt(x1b, x2b, eb, signature)
     print("2) Alice decodes the signature and gets : \n" + str(dechiff_signature))
 
     # ALICE HASH THE MESSAGE
@@ -173,7 +197,7 @@ def rsa_test_case():
         print("\n\t##### Alice : « Ouch... The signature doesn't go with Bob's message ! » \n")
 
 
-# ALICE KEY
+# ALICE KEY #
 x1a = 59491385193988702457395767302826768908819578825613995679824307137199289878110765336234096122020538234539
 x2a = 93629984011441362134159953033812389031433862201745309946147572649619757469843159468180335428479712932013
 na = x1a * x2a  # n
