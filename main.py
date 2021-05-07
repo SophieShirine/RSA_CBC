@@ -173,7 +173,7 @@ def rsa_test_case():
         print("\n\t##### Alice : « Ouch... The signature doesn't go with Bob's message ! » \n")
 
 
-# CLE ALICE
+# ALICE KEY
 x1a = 59491385193988702457395767302826768908819578825613995679824307137199289878110765336234096122020538234539
 x2a = 93629984011441362134159953033812389031433862201745309946147572649619757469843159468180335428479712932013
 na = x1a * x2a  # n
@@ -181,7 +181,7 @@ phia = ((x1a - 1) * (x2a - 1)) // utils.home_pgcd(x1a - 1, x2a - 1)
 ea = 17
 da = home_euclide(phia, ea)
 
-# CLE BOB
+# BOB KEY
 x1b = 20989494734566712640077598190855094400047634433405507639039008829569087182016762802141971886436081034299
 x2b = 58178100075428377506708174075007280674533193827166138377953839487354230052508187949993937621428818923049
 nb = x1b * x2b
@@ -189,8 +189,10 @@ phib = ((x1b - 1) * (x2b - 1)) // utils.home_pgcd(x1b - 1, x2b - 1)
 eb = 23
 db = home_euclide(phib, eb)
 
+# VECTOR VALUE FOR CBC
 vect = "f-_fdV5Jdsfme"
 decim_vect = utils.home_string_to_int(vect)
+
 chunks_size = 3
 
 if __name__ == '__main__':
@@ -200,11 +202,11 @@ if __name__ == '__main__':
     print("Alice public key ': (" + str(ea) + "," + str(na) + ")\n")
 
     print("Which test do you want to try ?\n1 - RSA\n2 - CBC")
-    choix = input()
+    choice = input()
 
-    if choix == "1":
+    if choice == "1":
         rsa_test_case()
-    elif choix == "2":
+    elif choice == "2":
         cbc_test_case()
     else:
         print("Error")
