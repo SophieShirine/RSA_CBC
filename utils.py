@@ -46,3 +46,9 @@ def home_hash_256(msg):
     hash2 = hash1.decode()  # en string
     hash3 = home_string_to_int(hash2)
     return hash3
+
+def home_pgcd(a, b):  # recherche du pgcd
+    if b == 0:
+        return a
+    else:
+        return home_pgcd(b, a % b)

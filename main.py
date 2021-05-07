@@ -1,12 +1,5 @@
 import utils
 
-def home_pgcd(a, b):  # recherche du pgcd
-    if b == 0:
-        return a
-    else:
-        return home_pgcd(b, a % b)
-
-
 def home_mod_exp(x, y, n):  # exponentiation modulaire
     result = 1
 
@@ -26,6 +19,7 @@ def home_euclide(y, b):
         (r, nouvr, t, nouvt) = (nouvr, r % nouvr, nouvt, t - (q * nouvt))
 
     return nouvt % y
+
 
 def home_cbc_encrypt(msg,key,initVect):
     # valeur des clés
@@ -59,6 +53,7 @@ def home_cbc_encrypt(msg,key,initVect):
         c = home_mod_exp(xor, e, n)
 
     return crypted
+
 
 def home_cbc_decrypt(cryptedMsg,key,initVect):
     # valeur des clés
@@ -126,36 +121,25 @@ def home_cipher_block_chaining(msg, key, initVect):
 
     print(decrypted)
 
-# CLE ALICE
-x1a = 59491385193988702457395767302826768908819578825613995679824307137199289878110765336234096122020538234539
-x2a = 93629984011441362134159953033812389031433862201745309946147572649619757469843159468180335428479712932013
-na = x1a * x2a  # n
-phia = ((x1a - 1) * (x2a - 1)) // home_pgcd(x1a - 1, x2a - 1)
-ea = 17  # exposant public
-da = home_euclide(phia, ea)  # exposant privé
 
-# CLE BOB
-x1b = 20989494734566712640077598190855094400047634433405507639039008829569087182016762802141971886436081034299
-x2b = 58178100075428377506708174075007280674533193827166138377953839487354230052508187949993937621428818923049
-nb = x1b * x2b
-phib = ((x1b - 1) * (x2b - 1)) // home_pgcd(x1b - 1, x2b - 1)
-eb = 23
-db = home_euclide(phib, eb)
+def cbc_test_case():
+    #ENTRER LE MESSAGE DE BOB
+    message = utils.messageLong()
 
-vect = "f-_fdV5Jdsfme"
-tailleBlocs = 3
+    #CHIFFRER CE MESSAGE AVEC LA CLE PUBLIQUE DE ALICE
+    cryptedMessage = home_cbc_encrypt(message,(ea,na),vect)
 
-if __name__ == '__main__':
-    print("Clé publique de Bob : (" + str(eb) + "," + str(nb) + ")")
-    print("Clé privé de Bob : db = " + str(db))
+    # BOB ENVOIE LE MESSAGE
+    print("\n \t##### Bob envoie le message à Alice ! #####\n")
 
-    print("Clé publique d'Alice ': (" + str(ea) + "," + str(na) + ")\n")
+    # ALICE DECHIFFRE LA SIGNATURE
+    decryptedMessage = home_cbc_decrypt(cryptedMessage,(da,na),vect)
+    print("2) Alice déchiffre le message de Bob et obtient : \n" + str(decryptedMessage))
 
+
+def rsa_test_case():
     # ENTRER LE MESSAGE DE BOB
     message = utils.mot10char()
-    #message = utils.messageLong()
-    #home_cipher_block_chaining(message,(ea,na,da),vect)
-
 
     # TRANSFORMER EN NOMBRE DECIMAL
     decimalMessage = utils.home_string_to_int(message)
@@ -167,7 +151,7 @@ if __name__ == '__main__':
 
     # ON CALCULE LE HASH DU MESSAGE
     Bhachis = utils.home_hash_256(message)
-    #Bhachis = utils.home_hash(message)
+    # Bhachis = utils.home_hash(message)
     print("3) Voici le hash en nombre décimal du message : \n" + str(Bhachis))
 
     # ON CALCULE ENSUITE LA SIGNATURE AVEC LA CLE PRIVEE ET LE HASH
@@ -188,7 +172,7 @@ if __name__ == '__main__':
 
     # ALICE HASH LE MESSAGE QU'ELLE A OBTENU
     Ahachis = utils.home_hash_256(dechiffMessage)
-    #Ahachis = utils.home_hash(dechiffMessage)
+    # Ahachis = utils.home_hash(dechiffMessage)
     print("3) Alice hash le message qu'elle a déchiffré et obtient :\n" + str(Ahachis))
 
     # ALICE VERIFIE QUE LA SIGNATURE EST SIMILAIRE AU HASH
@@ -196,3 +180,40 @@ if __name__ == '__main__':
         print("\n\t##### Alice : « C'est bon, Bob m'a envoyé le message suivant : " + str(dechiffMessage) + " »")
     else:
         print("\n\t##### Alice : « Aie... La signature ne colle pas avec le message de Bob ! » \n")
+
+
+# CLE ALICE
+x1a = 59491385193988702457395767302826768908819578825613995679824307137199289878110765336234096122020538234539
+x2a = 93629984011441362134159953033812389031433862201745309946147572649619757469843159468180335428479712932013
+na = x1a * x2a  # n
+phia = ((x1a - 1) * (x2a - 1)) // utils.home_pgcd(x1a - 1, x2a - 1)
+ea = 17  # exposant public
+da = home_euclide(phia, ea)  # exposant privé
+
+# CLE BOB
+x1b = 20989494734566712640077598190855094400047634433405507639039008829569087182016762802141971886436081034299
+x2b = 58178100075428377506708174075007280674533193827166138377953839487354230052508187949993937621428818923049
+nb = x1b * x2b
+phib = ((x1b - 1) * (x2b - 1)) // utils.home_pgcd(x1b - 1, x2b - 1)
+eb = 23
+db = home_euclide(phib, eb)
+
+vect = "f-_fdV5Jdsfme"
+tailleBlocs = 3
+
+if __name__ == '__main__':
+    print("Clé publique de Bob : (" + str(eb) + "," + str(nb) + ")")
+    print("Clé privé de Bob : db = " + str(db))
+
+    print("Clé publique d'Alice ': (" + str(ea) + "," + str(na) + ")\n")
+
+    print("Quelle test voulez-vous effectuer ?\n1 - RSA\n2 - CBC")
+    choix = input()
+
+    if choix == "1":
+        rsa_test_case()
+    elif choix == "2":
+        cbc_test_case()
+    else:
+        print("Erreur")
+
