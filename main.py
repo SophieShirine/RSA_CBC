@@ -1,11 +1,20 @@
+# -----------------------------------------------------------
+# demonstrates the exchange of a private message from one persone (Bob)
+# to another (Alice), using RSA and CBC crypting process
+# This program is not aimed for industrial use
+#
+# (C) 2021 Sophie Teimournia
+# -----------------------------------------------------------
+
 import utils
 import time
 
-'''@brief : exponentiation modulaire
-@param : int x,y,n
-@return : int result
-'''
 def home_mod_exp(x, y, n):
+    '''Modular exponentiation function x^y%n
+    :param x,y,n: integers
+    :return : integer result
+    '''
+
     result = 1
 
     while y > 0:
@@ -13,13 +22,15 @@ def home_mod_exp(x, y, n):
             result = (result * x) % n
         x = (x * x) % n
         y = y // 2
+
     return result
 
-'''@brief : algorithme d'euclide
-@param : int y,b
-@return : int nouvt%y
-'''
+
 def home_euclide(y, b):
+    '''Euclid algorithm
+    :param y,b: integers
+    :return : integer
+    '''
     (r, nouvr, t, nouvt) = (y, b, 0, 1)
 
     while nouvr > 1:
@@ -28,57 +39,59 @@ def home_euclide(y, b):
 
     return nouvt % y
 
-'''@brief : fonction qui crypte un message en utilisant le cbc
-@param : string msg, string init_vect, int key[2]
-@return : list crypted
-'''
+
 def home_cbc_encrypt(msg, key):
-    # valeur des clés
+    '''Crypting function of cbc
+    :param msg: message to encrypt in hexadecimal
+    :param key: key[0] = e, key[1] = n
+    :return : list crypted
+    '''
+
+    # key values
     e = key[0]
     n = key[1]
 
-    c = decim_vect  # valeur du vecteur utilise pour le xor a chaque iteration
+    c = decim_vect  # vector used at each iteration
 
-    blocs_msg = []  # tableau de string contenant le msg coupés en blocs
-    crypted = []  # tableau d'entiers contenant les valeurs cryptees de chaque bloc
+    msg_chunks = []  # array of strings, containing the message sliced in chunks of same size
+    crypted = []  # array of integers, containing the crypted value of each chunk
 
-    # DECOUPAGE DU MESSAGE EN BLOCS DE TAILLE IDENTIQUE
-    for i in range(len(msg), 0, -tailleBlocs):
-        if i - tailleBlocs < 0:
-            full_block = ("\0" * (tailleBlocs - i)) + msg[0:i]
-            blocs_msg.insert(0, full_block)
+    ## SLICE THE MESSAGE IN CHUNK OF SAME SIZE
+    for i in range(len(msg), 0, - chunks_size):
+        if i - chunks_size < 0:
+            full_block = ("\0" * (chunks_size - i)) + msg[0:i]
+            msg_chunks.insert(0, full_block)
         else:
-            blocs_msg.insert(0, msg[i - tailleBlocs:i])
+            msg_chunks.insert(0, msg[i - chunks_size:i])
 
-    # CRYPTAGE
-    for bloc in blocs_msg:
-        # calculer le xor
-        decim_bloc = utils.home_string_to_int(bloc)
-        xor = decim_bloc ^ c
-
-        # stocker la valeur chiffree
+    ## CRYPT EACH CHUNK
+    for bloc in msg_chunks:
+        decim_chunk = utils.home_string_to_int(bloc)         #get the decimal value
+        xor = decim_chunk ^ c
         crypted.append(home_mod_exp(xor, e, n))
-        # on change le vecteur
         c = home_mod_exp(xor, e, n)
 
     return crypted
 
-'''@brief : fonction qui décrypte un message en utilisant le cbc
-@param : list crypted_msg, string init_vect, int key[2]
-@return : string decrypted
-'''
+
 def home_cbc_decrypt(crypted_msg, key):
-    # valeur des clés
+    '''Function decoding a message using cbc
+    :param : list crypted_msg, a list of crypted chunks
+    :param key: key[0] = e, key[1] = n
+    :return : string decrypted
+    '''
+
+    # key values
     d = key[0]
     n = key[1]
 
-    c = decim_vect  # valeur du vecteur utilise pour le xor a chaque iteration
-    decrypted = ""
+    c = decim_vect
+    decrypted = ""              #decrypted message
 
-    # DECRYTER
+    # DECODING
     for bloc in crypted_msg:
-        decrypt_bloc = home_mod_exp(bloc, d, n)
-        xor = decrypt_bloc ^ c  # valeur decimale decryptee
+        decrypt_chunk = home_mod_exp(bloc, d, n)
+        xor = decrypt_chunk ^ c
         decrypted = decrypted + utils.home_int_to_string(xor)
         c = bloc
 
@@ -98,12 +111,12 @@ def home_cipher_block_chaining(msg, key):
     decrypted = ""
 
     # DECOUPAGE DU MESSAGE EN BLOCS DE TAILLE N (ICI N = 3)
-    for i in range(len(msg), 0, -tailleBlocs):
-        if i - tailleBlocs < 0:
-            full_block = ("\0" * (tailleBlocs - i)) + msg[0:i]
+    for i in range(len(msg), 0, -chunks_size):
+        if i - chunks_size < 0:
+            full_block = ("\0" * (chunks_size - i)) + msg[0:i]
             blocs_msg.insert(0, full_block)
         else:
-            blocs_msg.insert(0, msg[i - tailleBlocs:i])
+            blocs_msg.insert(0, msg[i - chunks_size:i])
 
     # CRYPTAGE
     for bloc in blocs_msg:
@@ -127,72 +140,70 @@ def home_cipher_block_chaining(msg, key):
 
     print(decrypted)
 
-'''@brief : test case of the cbc method
-'''
+
 def cbc_test_case():
-    # ENTRER LE MESSAGE DE BOB
-    message = utils.message_long()
+    '''CBC test Case'''
+    # BOB ENTERS A MESSAGE
+    message = utils.long_message()
     start = time.time()
 
-    # CHIFFRER CE MESSAGE AVEC LA CLE PUBLIQUE DE ALICE
+    # CRYPT THAT MUSIQUE USING ALICE'S PUBLIC KEY
     crypted_message = home_cbc_encrypt(message, (ea, na))
 
-    # BOB ENVOIE LE MESSAGE
-    print("\n \t##### Bob envoie le message à Alice ! #####\n")
+    # BOB SENDS THE MESSAGE
+    print("\n \t##### Bob sent the message to Alice ! #####\n")
 
-    # ALICE DECHIFFRE LE MESSAGE
+    # ALICE DECODES THE MESSAGE
     decrypted_message = home_cbc_decrypt(crypted_message, (da, na))
-    print("Alice déchiffre le message de Bob et obtient : \n" + str(decrypted_message))
+    print("Alice decodes the message and gets : \n" + str(decrypted_message))
 
     print("The time used to execute this is given below")
     end = time.time()
     print(end - start)
 
-'''@brief : test case of the rsa method
-'''
+
 def rsa_test_case():
-    # ENTRER LE MESSAGE DE BOB
+    '''RSA test Case'''
+    # BOB ENTERS A MESSAGE
     message = utils.mot10char()
 
-    # TRANSFORMER EN NOMBRE DECIMAL
+    # CHANGE IT INTO A DECIMAL VALUE
     decimal_message = utils.home_string_to_int(message)
-    print("1) La version en nombre décimal du secret est " + str(decimal_message))
+    print("1) The decimal value of secret is :  " + str(decimal_message))
 
-    # CHIFFRER AVEC LA CLE PUBLIQUE D'ALICE
+    # CRYPT THE MESSAGE WITH ALICE'S PUBLIC KEY
     chiff_message = home_mod_exp(decimal_message, ea, na)
-    print("2) Voici le message chiffré avec la clé publique de Alice : \n" + str(chiff_message))
+    print("2) Here is the crypted message : \n" + str(chiff_message))
 
-    # ON CALCULE LE HASH DU MESSAGE
+    # COMPUTE THE MESSAGE'S HASH
     Bhachis = utils.home_hash_256(message)
-    # Bhachis = utils.home_hash(message)
-    print("3) Voici le hash en nombre décimal du message : \n" + str(Bhachis))
+    print("3) Here is the message's hash in decimal value :\n" + str(Bhachis))
 
-    # ON CALCULE ENSUITE LA SIGNATURE AVEC LA CLE PRIVEE ET LE HASH
+    # CALCULATE THE SIGNATURE WITH THE PRIVATE KEY AND THE HASH
     signature = home_mod_exp(Bhachis, db, nb)
-    print("4) Voici la signature obtenue avec la clé privée de Bob et le hash :\n" + str(signature))
+    print("4) Here is the signature obtained with the hash and the private key :\n" + str(signature))
 
-    # BOB ENVOIE LE MESSAGE CHIFFRE ET LA SIGNATURE
-    print("\n \t##### Bob envoie le message et sa signature à Alice ! #####\n")
+    # BOB SENDS THE CRYPTED MESSAGE AND HIS SIGNATURE
+    print("\n \t##### Bob sent the message and the signature ! #####\n")
 
-    # ALICE DECHIFFRE LE MESSAGE
+    # ALICE DECODES THE MESSAGE
     dechiff_int = home_mod_exp(chiff_message, da, na)
     dechiff_message = utils.home_int_to_string(dechiff_int)
-    print("1) Alice déchiffre le message et obtient : \n" + str(dechiff_message))
+    print("1) Alice decodes the message and gets : \n" + str(dechiff_message))
 
-    # ALICE DECHIFFRE LA SIGNATURE
+    # ALICE DECODES THE SIGNATURE
     dechiff_signature = home_mod_exp(signature, eb, nb)
-    print("2) Alice déchiffre la signature de Bob et obtient : \n" + str(dechiff_signature))
+    print("2) Alice decodes the signature and gets : \n" + str(dechiff_signature))
 
-    # ALICE HASH LE MESSAGE QU'ELLE A OBTENU
+    # ALICE HASH THE MESSAGE
     Ahachis = utils.home_hash_256(dechiff_message)
-    # Ahachis = utils.home_hash(dechiffMessage)
-    print("3) Alice hash le message qu'elle a déchiffré et obtient :\n" + str(Ahachis))
+    print("3) Alice hashes the decrypted message and gets :\n" + str(Ahachis))
 
-    # ALICE VERIFIE QUE LA SIGNATURE EST SIMILAIRE AU HASH
+    # ALICE CHECKS IF THE SIGNATURE IS SIMILAR TO THE HASH
     if Ahachis - dechiff_signature == 0:
-        print("\n\t##### Alice : « C'est bon, Bob m'a envoyé le message suivant : " + str(dechiff_message) + " »")
+        print("\n\t##### Alice : « All good, Bob sent me the following message : " + str(dechiff_message) + " »")
     else:
-        print("\n\t##### Alice : « Aie... La signature ne colle pas avec le message de Bob ! » \n")
+        print("\n\t##### Alice : « Ouch... The signature doesn't go with Bob's message ! » \n")
 
 
 # CLE ALICE
@@ -200,8 +211,8 @@ x1a = 59491385193988702457395767302826768908819578825613995679824307137199289878
 x2a = 93629984011441362134159953033812389031433862201745309946147572649619757469843159468180335428479712932013
 na = x1a * x2a  # n
 phia = ((x1a - 1) * (x2a - 1)) // utils.home_pgcd(x1a - 1, x2a - 1)
-ea = 17  # exposant public
-da = home_euclide(phia, ea)  # exposant privé
+ea = 17
+da = home_euclide(phia, ea)
 
 # CLE BOB
 x1b = 20989494734566712640077598190855094400047634433405507639039008829569087182016762802141971886436081034299
@@ -213,15 +224,15 @@ db = home_euclide(phib, eb)
 
 vect = "f-_fdV5Jdsfme"
 decim_vect = utils.home_string_to_int(vect)
-tailleBlocs = 3
+chunks_size = 3
 
 if __name__ == '__main__':
-    print("Clé publique de Bob : (" + str(eb) + "," + str(nb) + ")")
-    print("Clé privé de Bob : db = " + str(db))
+    print("Bob's public key : (" + str(eb) + "," + str(nb) + ")")
+    print("Bob's private key : db = " + str(db))
 
-    print("Clé publique d'Alice ': (" + str(ea) + "," + str(na) + ")\n")
+    print("Alice public key ': (" + str(ea) + "," + str(na) + ")\n")
 
-    print("Quelle test voulez-vous effectuer ?\n1 - RSA\n2 - CBC")
+    print("Which test do you want to try ?\n1 - RSA\n2 - CBC")
     choix = input()
 
     if choix == "1":
@@ -229,4 +240,4 @@ if __name__ == '__main__':
     elif choix == "2":
         cbc_test_case()
     else:
-        print("Erreur")
+        print("Error")
