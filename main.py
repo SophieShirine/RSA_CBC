@@ -9,11 +9,15 @@
 import utils
 import time
 
+
 def home_mod_exp(x, y, n):
-    '''Modular exponentiation function x^y%n
-    :param x,y,n: integers
-    :return : integer result
-    '''
+    """
+        Modular exponentiation function x^y%n
+        :param x: integer
+        :param y: integer
+        :param n: integer
+        :return : integer result
+    """
 
     result = 1
 
@@ -27,10 +31,12 @@ def home_mod_exp(x, y, n):
 
 
 def home_euclide(y, b):
-    '''Euclid algorithm
-    :param y,b: integers
-    :return : integer
-    '''
+    """
+        Euclid algorithm
+        :param y: integer
+        :param b: integer
+        :return : integer
+    """
     (r, nouvr, t, nouvt) = (y, b, 0, 1)
 
     while nouvr > 1:
@@ -41,11 +47,12 @@ def home_euclide(y, b):
 
 
 def home_cbc_encrypt(msg, key):
-    '''Crypting function of cbc
-    :param msg: message to encrypt in hexadecimal
-    :param key: key[0] = e, key[1] = n
-    :return : list crypted
-    '''
+    """
+        Crypting function of cbc
+        :param msg: message to encrypt in hexadecimal
+        :param key: key[0] = e, key[1] = n
+        :return : list crypted
+    """
 
     # key values
     e = key[0]
@@ -56,7 +63,7 @@ def home_cbc_encrypt(msg, key):
     msg_chunks = []  # array of strings, containing the message sliced in chunks of same size
     crypted = []  # array of integers, containing the crypted value of each chunk
 
-    ## SLICE THE MESSAGE IN CHUNK OF SAME SIZE
+    # SLICE THE MESSAGE IN CHUNK OF SAME SIZE
     for i in range(len(msg), 0, - chunks_size):
         if i - chunks_size < 0:
             full_block = ("\0" * (chunks_size - i)) + msg[0:i]
@@ -64,9 +71,9 @@ def home_cbc_encrypt(msg, key):
         else:
             msg_chunks.insert(0, msg[i - chunks_size:i])
 
-    ## CRYPT EACH CHUNK
+    # CRYPT EACH CHUNK
     for bloc in msg_chunks:
-        decim_chunk = utils.home_string_to_int(bloc)         #get the decimal value
+        decim_chunk = utils.home_string_to_int(bloc)  # get the decimal value
         xor = decim_chunk ^ c
         crypted.append(home_mod_exp(xor, e, n))
         c = home_mod_exp(xor, e, n)
@@ -75,18 +82,19 @@ def home_cbc_encrypt(msg, key):
 
 
 def home_cbc_decrypt(crypted_msg, key):
-    '''Function decoding a message using cbc
-    :param : list crypted_msg, a list of crypted chunks
-    :param key: key[0] = e, key[1] = n
-    :return : string decrypted
-    '''
+    """
+        Function decoding a message using cbc
+        :param crypted_msg: a list of crypted chunks
+        :param key: key[0] = e, key[1] = n
+        :return : string decrypted
+    """
 
     # key values
     d = key[0]
     n = key[1]
 
     c = decim_vect
-    decrypted = ""              #decrypted message
+    decrypted = ""  # decrypted message
 
     # DECODING
     for bloc in crypted_msg:
@@ -98,51 +106,9 @@ def home_cbc_decrypt(crypted_msg, key):
     return decrypted
 
 
-def home_cipher_block_chaining(msg, key):
-    # valeur des clés
-    e = key[0]
-    n = key[1]
-    d = key[2]
-
-    c = decim_vect  # valeur du vecteur utilise pour le xor a chaque iteration
-
-    blocs_msg = []  # tableau de string contenant le msg coupés en blocs
-    crypted = []  # tableau d'entiers contenant les valeurs cryptees de chaque bloc
-    decrypted = ""
-
-    # DECOUPAGE DU MESSAGE EN BLOCS DE TAILLE N (ICI N = 3)
-    for i in range(len(msg), 0, -chunks_size):
-        if i - chunks_size < 0:
-            full_block = ("\0" * (chunks_size - i)) + msg[0:i]
-            blocs_msg.insert(0, full_block)
-        else:
-            blocs_msg.insert(0, msg[i - chunks_size:i])
-
-    # CRYPTAGE
-    for bloc in blocs_msg:
-        # calculer le xor
-        decim_bloc = utils.home_string_to_int(bloc)
-        xor = decim_bloc ^ c
-
-        # stocker la valeur chiffree
-        crypted.append(home_mod_exp(xor, e, n))
-        # on change le vecteur
-        c = home_mod_exp(xor, e, n)
-
-    c = decim_vect
-    # DECRYTER
-    for bloc in crypted:
-        decrypt_bloc = home_mod_exp(bloc, d, n)
-        xor = decrypt_bloc ^ c  # valeur decimale decryptee
-        # decrypted.append(utils.home_int_to_string(xor))
-        decrypted = decrypted + utils.home_int_to_string(xor)
-        c = bloc
-
-    print(decrypted)
-
-
 def cbc_test_case():
-    '''CBC test Case'''
+    """CBC test Case"""
+
     # BOB ENTERS A MESSAGE
     message = utils.long_message()
     start = time.time()
@@ -163,7 +129,8 @@ def cbc_test_case():
 
 
 def rsa_test_case():
-    '''RSA test Case'''
+    """RSA test Case"""
+
     # BOB ENTERS A MESSAGE
     message = utils.mot10char()
 
