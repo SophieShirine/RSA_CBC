@@ -8,7 +8,7 @@ def mot10char():  # entrer le secret
         secret = input("C'est beaucoup trop long, 10 caractères S.V.P : ")
     return (secret)
 
-def messageLong():
+def message_long():
     secret = input("Donnez un message secret : ")
     while (len(secret) > 1000000000000000000000000):
         secret = input("C'est beaucoup trop long, 10 caractères S.V.P : ")

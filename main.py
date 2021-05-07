@@ -1,6 +1,11 @@
 import utils
+import time
 
-def home_mod_exp(x, y, n):  # exponentiation modulaire
+'''@brief : exponentiation modulaire
+@param : int x,y,n
+@return : int result
+'''
+def home_mod_exp(x, y, n):
     result = 1
 
     while y > 0:
@@ -10,7 +15,10 @@ def home_mod_exp(x, y, n):  # exponentiation modulaire
         y = y // 2
     return result
 
-
+'''@brief : algorithme d'euclide
+@param : int y,b
+@return : int nouvt%y
+'''
 def home_euclide(y, b):
     (r, nouvr, t, nouvt) = (y, b, 0, 1)
 
@@ -20,32 +28,33 @@ def home_euclide(y, b):
 
     return nouvt % y
 
-
-def home_cbc_encrypt(msg,key,initVect):
+'''@brief : fonction qui crypte un message en utilisant le cbc
+@param : string msg, string init_vect, int key[2]
+@return : list crypted
+'''
+def home_cbc_encrypt(msg, key):
     # valeur des clés
     e = key[0]
     n = key[1]
 
-    #vecteurs
-    decimVect = utils.home_string_to_int(initVect)  # valeur décimal du vecteur initiale
-    c = decimVect  # valeur du vecteur utilise pour le xor a chaque iteration
+    c = decim_vect  # valeur du vecteur utilise pour le xor a chaque iteration
 
-    blocsMsg = []  # tableau de string contenant le msg coupés en blocs
+    blocs_msg = []  # tableau de string contenant le msg coupés en blocs
     crypted = []  # tableau d'entiers contenant les valeurs cryptees de chaque bloc
 
-    # DECOUPAGE DU MESSAGE EN BLOCS DE TAILLE N (ICI N = 3)
+    # DECOUPAGE DU MESSAGE EN BLOCS DE TAILLE IDENTIQUE
     for i in range(len(msg), 0, -tailleBlocs):
         if i - tailleBlocs < 0:
-            fullBlock = ("\0" * (tailleBlocs - i)) + msg[0:i]
-            blocsMsg.insert(0, fullBlock)
+            full_block = ("\0" * (tailleBlocs - i)) + msg[0:i]
+            blocs_msg.insert(0, full_block)
         else:
-            blocsMsg.insert(0, msg[i - tailleBlocs:i])
+            blocs_msg.insert(0, msg[i - tailleBlocs:i])
 
     # CRYPTAGE
-    for bloc in blocsMsg:
+    for bloc in blocs_msg:
         # calculer le xor
-        decimBloc = utils.home_string_to_int(bloc)
-        xor = decimBloc ^ c
+        decim_bloc = utils.home_string_to_int(bloc)
+        xor = decim_bloc ^ c
 
         # stocker la valeur chiffree
         crypted.append(home_mod_exp(xor, e, n))
@@ -54,100 +63,104 @@ def home_cbc_encrypt(msg,key,initVect):
 
     return crypted
 
-
-def home_cbc_decrypt(cryptedMsg,key,initVect):
+'''@brief : fonction qui décrypte un message en utilisant le cbc
+@param : list crypted_msg, string init_vect, int key[2]
+@return : string decrypted
+'''
+def home_cbc_decrypt(crypted_msg, key):
     # valeur des clés
     d = key[0]
     n = key[1]
 
-    #vecteur
-    decimVect = utils.home_string_to_int(initVect)  # valeur décimal du vecteur initiale
-    c = decimVect  # valeur du vecteur utilise pour le xor a chaque iteration
+    c = decim_vect  # valeur du vecteur utilise pour le xor a chaque iteration
     decrypted = ""
 
     # DECRYTER
-    for bloc in cryptedMsg:
-        decryptBloc = home_mod_exp(bloc, d, n)
-        xor = decryptBloc ^ c  # valeur decimale decryptee
-        # decrypted.append(utils.home_int_to_string(xor))
+    for bloc in crypted_msg:
+        decrypt_bloc = home_mod_exp(bloc, d, n)
+        xor = decrypt_bloc ^ c  # valeur decimale decryptee
         decrypted = decrypted + utils.home_int_to_string(xor)
         c = bloc
 
     return decrypted
 
 
-def home_cipher_block_chaining(msg, key, initVect):
-    #valeur des clés
+def home_cipher_block_chaining(msg, key):
+    # valeur des clés
     e = key[0]
     n = key[1]
     d = key[2]
 
-    decimVect = utils.home_string_to_int(initVect) #valeur décimal du vecteur initiale
-    c = decimVect #valeur du vecteur utilise pour le xor a chaque iteration
+    c = decim_vect  # valeur du vecteur utilise pour le xor a chaque iteration
 
-    blocsMsg = [] #tableau de string contenant le msg coupés en blocs
-    crypted = [] #tableau d'entiers contenant les valeurs cryptees de chaque bloc
+    blocs_msg = []  # tableau de string contenant le msg coupés en blocs
+    crypted = []  # tableau d'entiers contenant les valeurs cryptees de chaque bloc
     decrypted = ""
 
-    #DECOUPAGE DU MESSAGE EN BLOCS DE TAILLE N (ICI N = 3)
-    for i in range(len(msg),0,-tailleBlocs):
+    # DECOUPAGE DU MESSAGE EN BLOCS DE TAILLE N (ICI N = 3)
+    for i in range(len(msg), 0, -tailleBlocs):
         if i - tailleBlocs < 0:
-            fullBlock = ("\0" * (tailleBlocs - i)) + msg[0:i]
-            blocsMsg.insert(0,fullBlock)
+            full_block = ("\0" * (tailleBlocs - i)) + msg[0:i]
+            blocs_msg.insert(0, full_block)
         else:
-            blocsMsg.insert(0,msg[i-tailleBlocs:i])
+            blocs_msg.insert(0, msg[i - tailleBlocs:i])
 
-
-    #CRYPTAGE
-    for bloc in blocsMsg:
+    # CRYPTAGE
+    for bloc in blocs_msg:
         # calculer le xor
-        decimBloc = utils.home_string_to_int(bloc)
-        xor = decimBloc ^ c
+        decim_bloc = utils.home_string_to_int(bloc)
+        xor = decim_bloc ^ c
 
         # stocker la valeur chiffree
         crypted.append(home_mod_exp(xor, e, n))
         # on change le vecteur
         c = home_mod_exp(xor, e, n)
 
-
-    c = decimVect
-    #DECRYTER
+    c = decim_vect
+    # DECRYTER
     for bloc in crypted:
-        decryptBloc = home_mod_exp(bloc, d, n)
-        xor = decryptBloc ^ c #valeur decimale decryptee
-        #decrypted.append(utils.home_int_to_string(xor))
+        decrypt_bloc = home_mod_exp(bloc, d, n)
+        xor = decrypt_bloc ^ c  # valeur decimale decryptee
+        # decrypted.append(utils.home_int_to_string(xor))
         decrypted = decrypted + utils.home_int_to_string(xor)
         c = bloc
 
     print(decrypted)
 
-
+'''@brief : test case of the cbc method
+'''
 def cbc_test_case():
-    #ENTRER LE MESSAGE DE BOB
-    message = utils.messageLong()
+    # ENTRER LE MESSAGE DE BOB
+    message = utils.message_long()
+    start = time.time()
 
-    #CHIFFRER CE MESSAGE AVEC LA CLE PUBLIQUE DE ALICE
-    cryptedMessage = home_cbc_encrypt(message,(ea,na),vect)
+    # CHIFFRER CE MESSAGE AVEC LA CLE PUBLIQUE DE ALICE
+    crypted_message = home_cbc_encrypt(message, (ea, na))
 
     # BOB ENVOIE LE MESSAGE
     print("\n \t##### Bob envoie le message à Alice ! #####\n")
 
-    # ALICE DECHIFFRE LA SIGNATURE
-    decryptedMessage = home_cbc_decrypt(cryptedMessage,(da,na),vect)
-    print("2) Alice déchiffre le message de Bob et obtient : \n" + str(decryptedMessage))
+    # ALICE DECHIFFRE LE MESSAGE
+    decrypted_message = home_cbc_decrypt(crypted_message, (da, na))
+    print("Alice déchiffre le message de Bob et obtient : \n" + str(decrypted_message))
 
+    print("The time used to execute this is given below")
+    end = time.time()
+    print(end - start)
 
+'''@brief : test case of the rsa method
+'''
 def rsa_test_case():
     # ENTRER LE MESSAGE DE BOB
     message = utils.mot10char()
 
     # TRANSFORMER EN NOMBRE DECIMAL
-    decimalMessage = utils.home_string_to_int(message)
-    print("1) La version en nombre décimal du secret est " + str(decimalMessage))
+    decimal_message = utils.home_string_to_int(message)
+    print("1) La version en nombre décimal du secret est " + str(decimal_message))
 
     # CHIFFRER AVEC LA CLE PUBLIQUE D'ALICE
-    chiffMessage = home_mod_exp(decimalMessage, ea, na)
-    print("2) Voici le message chiffré avec la clé publique de Alice : \n" + str(chiffMessage))
+    chiff_message = home_mod_exp(decimal_message, ea, na)
+    print("2) Voici le message chiffré avec la clé publique de Alice : \n" + str(chiff_message))
 
     # ON CALCULE LE HASH DU MESSAGE
     Bhachis = utils.home_hash_256(message)
@@ -162,22 +175,22 @@ def rsa_test_case():
     print("\n \t##### Bob envoie le message et sa signature à Alice ! #####\n")
 
     # ALICE DECHIFFRE LE MESSAGE
-    dechiffInt = home_mod_exp(chiffMessage, da, na)
-    dechiffMessage = utils.home_int_to_string(dechiffInt)
-    print("1) Alice déchiffre le message et obtient : \n" + str(dechiffMessage))
+    dechiff_int = home_mod_exp(chiff_message, da, na)
+    dechiff_message = utils.home_int_to_string(dechiff_int)
+    print("1) Alice déchiffre le message et obtient : \n" + str(dechiff_message))
 
     # ALICE DECHIFFRE LA SIGNATURE
-    dechiffSignature = home_mod_exp(signature, eb, nb)
-    print("2) Alice déchiffre la signature de Bob et obtient : \n" + str(dechiffSignature))
+    dechiff_signature = home_mod_exp(signature, eb, nb)
+    print("2) Alice déchiffre la signature de Bob et obtient : \n" + str(dechiff_signature))
 
     # ALICE HASH LE MESSAGE QU'ELLE A OBTENU
-    Ahachis = utils.home_hash_256(dechiffMessage)
+    Ahachis = utils.home_hash_256(dechiff_message)
     # Ahachis = utils.home_hash(dechiffMessage)
     print("3) Alice hash le message qu'elle a déchiffré et obtient :\n" + str(Ahachis))
 
     # ALICE VERIFIE QUE LA SIGNATURE EST SIMILAIRE AU HASH
-    if Ahachis - dechiffSignature == 0:
-        print("\n\t##### Alice : « C'est bon, Bob m'a envoyé le message suivant : " + str(dechiffMessage) + " »")
+    if Ahachis - dechiff_signature == 0:
+        print("\n\t##### Alice : « C'est bon, Bob m'a envoyé le message suivant : " + str(dechiff_message) + " »")
     else:
         print("\n\t##### Alice : « Aie... La signature ne colle pas avec le message de Bob ! » \n")
 
@@ -199,6 +212,7 @@ eb = 23
 db = home_euclide(phib, eb)
 
 vect = "f-_fdV5Jdsfme"
+decim_vect = utils.home_string_to_int(vect)
 tailleBlocs = 3
 
 if __name__ == '__main__':
@@ -216,4 +230,3 @@ if __name__ == '__main__':
         cbc_test_case()
     else:
         print("Erreur")
-
